@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-from .BearerAuth import BearerAuth
-from .GoogleHelpers import getGoogleProjectNumber
+from BearerAuth import BearerAuth
+from GoogleHelpers import getGoogleProjectNumber
+import pandas as pd
 import requests
+from tabulate import tabulate
 import logging
 import re
 import random
@@ -1065,16 +1067,57 @@ if __name__ == "__main__":
     from pathlib import Path
 
     if len(sys.argv) != 4:
-        logging.notice("Usage: gcpcvs.py <credentials> <region> <API_URL_PATH>")
+        logging.warning("Usage: gcpcvs.py <credentials> <region> <API_URL_PATH>")
         sys.exit(1)
 
     credentials = Path(sys.argv[1])
     region = sys.argv[2]
     urlpath = sys.argv[3]
 
-    cvs = gcpcvs(None, credentials)
+    cvs = gcpcvs(credentials)
     result = cvs._do_api_get(f"{cvs.baseurl}/locations/{region}/{urlpath}")
     if result.status_code == 200:
-        print(json.dumps(result.json(), indent=4))
+#        for  result.json()).items():
+#             print (
+#        print(json.dumps(result.json(), indent=4))
+        json_object = json.loads(json.dumps(result.json()))
+        print("This is the type of object that summarizes all available volumes")
+        print(type(json_object))
+        for iterator in json_object:
+            volume_id = iterator['volumeId']
+            volume_result = cvs._do_api_get(f"{cvs.baseurl}/locations/{region}/{urlpath}/{volume_id}")
+            if volume_result.status_code == 200:
+               volume_json_object = json.loads(json.dumps(volume_result.json()))
+               print("This is the type of Volume JSON Object")
+               print(type(volume_json_object))
+               export_policy = volume_json_object['exportPolicy']
+               print("This is type of export policy")
+               print(type(export_policy))
+               print("Type of export policy rules")
+               print(type(export_policy['rules']))
+               print(export_policy['rules'])
+               for i in export_policy['rules']:
+                   i['hasRootAccess'] = "false"
+                   print("Updated value of export policy rule")
+                   print(i)
+               print("This is my export policy now")
+               print(export_policy)
+               print("Execute Volume Update")
+               print(json.dumps(cvs._modifyVolumeByVolumeID(region, volume_id, {"exportPolicy": export_policy}), indent=4))
+#       df = pd.DataFrame.from_dict(r)
+#       print("Tabulated output:\n")
+#       print(tabulate(df), headers=['name','exportPolicy.rules.)
+#    else:
+#        logging.error(f"HTTP code: {result.status_code} {result.reason} for url: {result.url}")
+
+
+#    print("Output:\n")
+#    print(json.dumps(cvs._modifyVolumeByVolumeID(region, "26336752-75df-4f80-592b-9ac7a9f4352a",{"exportPolicy":{"rules":[{"access":"ReadWrite","allowedClients":"0.0.0.0/0","hasRootAccess":"off","kerberos5ReadOnly":{"checked":False},"kerberos5ReadWrite":{"checked":False},"kerberos5iReadOnly":{"checked":False},"kerberos5iReadWrite":{"checked":False},"kerberos5pReadOnly":{"checked":False},"kerberos5pReadWrite":{"checked":False},"nfsv3":{"checked":True},"nfsv4":{"checked":True}}]}}), indent=4))
+#    result = cvs._do_api_get(f"{cvs.baseurl}/locations/{region}/{urlpath}")
+#    if result.status_code == 200:
+#       print(json.dumps(result.json(), indent=4))
+#       df = pd.DataFrame.from_dict(r)
+#       print("Tabulated output:\n")
+#       print(tabulate(df), headers=['name','exportPolicy.rules.)
     else:
-        logging.error(f"HTTP code: {result.status_code} {result.reason} for url: {result.url}")
+       logging.error(f"HTTP code: {result.status_code} {result.reason} for url: {result.url}")

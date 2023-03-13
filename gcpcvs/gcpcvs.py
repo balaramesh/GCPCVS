@@ -1081,28 +1081,28 @@ if __name__ == "__main__":
 #             print (
 #        print(json.dumps(result.json(), indent=4))
         json_object = json.loads(json.dumps(result.json()))
-        print("This is the type of object that summarizes all available volumes")
-        print(type(json_object))
+#        print("This is the type of object that summarizes all available volumes")
+#        print(type(json_object))
         for iterator in json_object:
             volume_id = iterator['volumeId']
             volume_result = cvs._do_api_get(f"{cvs.baseurl}/locations/{region}/{urlpath}/{volume_id}")
             if volume_result.status_code == 200:
                volume_json_object = json.loads(json.dumps(volume_result.json()))
-               print("This is the type of Volume JSON Object")
-               print(type(volume_json_object))
+ #              print("This is the type of Volume JSON Object")
+ #              print(type(volume_json_object))
                export_policy = volume_json_object['exportPolicy']
-               print("This is type of export policy")
-               print(type(export_policy))
-               print("Type of export policy rules")
-               print(type(export_policy['rules']))
-               print(export_policy['rules'])
+ #              print("This is type of export policy")
+ #              print(type(export_policy))
+ #              print("Type of export policy rules")
+ #              print(type(export_policy['rules']))
+ #              print(export_policy['rules'])
                for i in export_policy['rules']:
                    i['hasRootAccess'] = "false"
-                   print("Updated value of export policy rule")
-                   print(i)
-               print("This is my export policy now")
-               print(export_policy)
-               print("Execute Volume Update")
+ #                  print("Updated value of export policy rule")
+ #                  print(i)
+ #              print("This is my export policy now")
+ #              print(export_policy)
+               print("Execute Volume Update for volume: " + iterator['name'])
                print(json.dumps(cvs._modifyVolumeByVolumeID(region, volume_id, {"exportPolicy": export_policy}), indent=4))
 #       df = pd.DataFrame.from_dict(r)
 #       print("Tabulated output:\n")
